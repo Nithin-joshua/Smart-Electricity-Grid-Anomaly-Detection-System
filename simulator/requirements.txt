@@ -1,0 +1,19 @@
+# ==============================================================================
+# Simulator Module Dependencies
+# Smart Electricity Grid — Meter Simulation + MQTT Publishing
+# ==============================================================================
+
+# MQTT client for publishing meter telemetry to the broker.
+# v1.6.1 is the last stable release of the v1 API; v2.x introduces
+# breaking callback signature changes we haven't migrated to yet.
+paho-mqtt==1.6.1
+
+# Numerical computation for load profile synthesis (sin, gaussian noise).
+numpy==1.26.4
+
+# Tabular data handling for fast-forward CSV dataset export.
+pandas==2.2.2
+
+# Loads .env files into os.environ for local development parity
+# with Docker's env_file injection.
+python-dotenv==1.0.1

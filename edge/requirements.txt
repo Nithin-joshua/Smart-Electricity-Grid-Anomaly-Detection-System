@@ -1,0 +1,23 @@
+# ==============================================================================
+# Edge Processor Module Dependencies
+# Smart Electricity Grid — Stream Processing + Anomaly Detection
+# ==============================================================================
+
+# MQTT client for subscribing to the meter telemetry stream.
+paho-mqtt==1.6.1
+
+# Numerical computation for feature extraction and threshold checks.
+numpy==1.26.4
+
+# InfluxDB v2 client for writing processed readings to the time-series DB.
+# Includes built-in batching, retry logic, and async write support.
+influxdb-client==1.44.0
+
+# Loads .env files into os.environ for local development.
+python-dotenv==1.0.1
+
+# Lightweight TensorFlow Lite runtime for on-device LSTM inference.
+# This is ~5MB vs ~500MB for full tensorflow — critical for edge deployments.
+# NOTE: tflite-runtime wheels are platform-specific. On platforms where
+# the PyPI wheel is unavailable, fall back to tensorflow==2.16.1.
+tflite-runtime==2.14.0; platform_machine != "aarch64"

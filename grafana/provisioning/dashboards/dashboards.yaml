@@ -1,0 +1,19 @@
+# ==============================================================================
+# Grafana Dashboard Provisioning
+# Auto-loads dashboard JSON files from the mounted volume on first boot.
+# ==============================================================================
+
+apiVersion: 1
+
+providers:
+  - name: Smart Grid Dashboards
+    orgId: 1
+    folder: Smart Grid
+    type: file
+    disableDeletion: false
+    editable: true
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

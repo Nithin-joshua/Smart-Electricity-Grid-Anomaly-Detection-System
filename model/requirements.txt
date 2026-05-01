@@ -1,0 +1,22 @@
+# ==============================================================================
+# ML Model Module Dependencies
+# Smart Electricity Grid — LSTM Autoencoder Training Pipeline
+# ==============================================================================
+
+# Full TensorFlow for model training (Keras LSTM autoencoder).
+# v2.16.1 is the last release before the Keras 3 migration.
+tensorflow==2.16.1
+
+# Numerical computation for array operations and data preprocessing.
+numpy==1.26.4
+
+# Tabular data ingestion and feature engineering on training datasets.
+pandas==2.2.2
+
+# Visualization of training curves, reconstruction error distributions,
+# and anomaly threshold calibration plots.
+matplotlib==3.9.2
+
+# Preprocessing (StandardScaler), train/test splitting, and evaluation
+# metrics (precision, recall, F1) for threshold tuning.
+scikit-learn==1.5.1

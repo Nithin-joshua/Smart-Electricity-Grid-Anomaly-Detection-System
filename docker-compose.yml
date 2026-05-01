@@ -1,0 +1,164 @@
+# ==============================================================================
+# Docker Compose: Smart Electricity Grid Anomaly Detection System
+# Full-stack orchestration — broker, time-series DB, dashboards, simulator, edge
+# ==============================================================================
+#
+# Usage:
+#   docker-compose up -d            # Start all services
+#   docker-compose up -d simulator  # Start only the simulator + its deps
+#   docker-compose logs -f edge_processor  # Tail edge processor logs
+#   docker-compose down -v          # Stop everything and remove volumes
+#
+# ==============================================================================
+
+services:
+
+  # --------------------------------------------------------------------------
+  # MOSQUITTO — MQTT Message Broker
+  # --------------------------------------------------------------------------
+  # Central telemetry transport layer. Receives meter readings from the
+  # simulator and forwards them to the edge processor via topic subscriptions.
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: smartgrid_mosquitto
+    restart: unless-stopped
+    ports:
+      - "${MQTT_PORT:-1883}:1883"       # MQTT listener
+      - "9001:9001"                      # WebSocket listener (Grafana MQTT plugin)
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_logs:/mosquitto/log
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -t '$$SYS/#' -C 1 -u '' -P '' | head -c 1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - smartgrid_network
+
+  # --------------------------------------------------------------------------
+  # INFLUXDB — Time-Series Database
+  # --------------------------------------------------------------------------
+  # Stores processed meter readings and anomaly detection results.
+  # The edge processor writes here; Grafana reads from here.
+  influxdb:
+    image: influxdb:2.7
+    container_name: smartgrid_influxdb
+    restart: unless-stopped
+    ports:
+      - "${INFLUX_PORT:-8086}:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUX_INIT_USERNAME:-admin}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUX_INIT_PASSWORD:-admin12345}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUX_ORG:-smartgrid}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUX_BUCKET:-meter_readings}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUX_TOKEN:-smartgrid-dev-token-change-in-production}
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+      - influxdb_config:/etc/influxdb2
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - smartgrid_network
+
+  # --------------------------------------------------------------------------
+  # GRAFANA — Monitoring & Visualization Dashboard
+  # --------------------------------------------------------------------------
+  # Pre-provisioned with InfluxDB datasource and smart grid dashboards.
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: smartgrid_grafana
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_INSTALL_PLUGINS=grafana-mqtt-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    networks:
+      - smartgrid_network
+
+  # --------------------------------------------------------------------------
+  # SIMULATOR — Smart Meter Fleet Publisher
+  # --------------------------------------------------------------------------
+  # Generates realistic residential meter readings and publishes them
+  # to the MQTT broker at the configured interval.
+  simulator:
+    build:
+      context: .
+      dockerfile: simulator/Dockerfile
+    container_name: smartgrid_simulator
+    restart: unless-stopped
+    environment:
+      - MQTT_HOST=mosquitto
+      - MQTT_PORT=1883
+    env_file:
+      - .env
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    networks:
+      - smartgrid_network
+
+  # --------------------------------------------------------------------------
+  # EDGE PROCESSOR — Stream Consumer + Anomaly Detector
+  # --------------------------------------------------------------------------
+  # Subscribes to meter readings from MQTT, runs TFLite inference,
+  # classifies anomalies, and writes results to InfluxDB.
+  edge_processor:
+    build:
+      context: .
+      dockerfile: edge/Dockerfile
+    container_name: smartgrid_edge_processor
+    restart: unless-stopped
+    environment:
+      - MQTT_HOST=mosquitto
+      - MQTT_PORT=1883
+      - INFLUX_URL=http://influxdb:8086
+      - INFLUX_TOKEN=${INFLUX_TOKEN:-smartgrid-dev-token-change-in-production}
+      - INFLUX_ORG=${INFLUX_ORG:-smartgrid}
+      - INFLUX_BUCKET=${INFLUX_BUCKET:-meter_readings}
+    env_file:
+      - .env
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
+    networks:
+      - smartgrid_network
+
+# ==============================================================================
+# NAMED VOLUMES — Persistent storage across container restarts
+# ==============================================================================
+volumes:
+  mosquitto_data:
+    driver: local
+  mosquitto_logs:
+    driver: local
+  influxdb_data:
+    driver: local
+  influxdb_config:
+    driver: local
+  grafana_data:
+    driver: local
+
+# ==============================================================================
+# NETWORK — Isolated bridge network for inter-service communication
+# ==============================================================================
+networks:
+  smartgrid_network:
+    driver: bridge
+    name: smartgrid_net

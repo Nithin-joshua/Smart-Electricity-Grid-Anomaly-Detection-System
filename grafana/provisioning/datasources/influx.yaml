@@ -1,0 +1,21 @@
+# ==============================================================================
+# Grafana Datasource Provisioning — InfluxDB v2
+# Auto-configures the InfluxDB connection on Grafana first boot.
+# ==============================================================================
+
+apiVersion: 1
+
+datasources:
+  - name: InfluxDB - Smart Grid
+    type: influxdb
+    access: proxy
+    url: http://influxdb:8086
+    isDefault: true
+    jsonData:
+      version: Flux
+      organization: smartgrid
+      defaultBucket: meter_readings
+      tlsSkipVerify: true
+    secureJsonData:
+      token: smartgrid-dev-token-change-in-production
+    editable: true

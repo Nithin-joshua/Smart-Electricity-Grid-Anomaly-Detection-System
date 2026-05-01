@@ -1,0 +1,64 @@
+# ==============================================================================
+# .gitignore — Smart Electricity Grid Anomaly Detection System
+# ==============================================================================
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+
+# --- Virtual Environments ---
+venv/
+.venv/
+env/
+.env/
+
+# --- Environment Secrets ---
+# .env contains local dev secrets (tokens, passwords).
+# .env.example is the safe template and IS tracked.
+.env
+!.env.example
+
+# --- IDE / Editor ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# --- Data Files ---
+# Raw and processed datasets are too large for VCS.
+# Regenerate via: python -m simulator.cli_entrypoint --mode fastforward
+data/raw/
+data/processed/
+
+# --- Model Artifacts ---
+# Trained model weights and converted TFLite files.
+# Regenerate via the training pipeline.
+model/artifacts/*.h5
+model/artifacts/*.tflite
+model/artifacts/*.keras
+
+# --- Logs ---
+*.log
+logs/
+
+# --- Docker ---
+# Ignore persistent volume data if mounted locally.
+mosquitto/data/
+mosquitto/log/
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+
+# --- Testing ---
+.coverage
+htmlcov/
+.pytest_cache/
