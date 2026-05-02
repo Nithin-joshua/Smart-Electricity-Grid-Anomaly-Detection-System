@@ -20,3 +20,7 @@ matplotlib==3.9.2
 # Preprocessing (StandardScaler), train/test splitting, and evaluation
 # metrics (precision, recall, F1) for threshold tuning.
 scikit-learn==1.5.1
+
+# Apache Parquet I/O — columnar storage for per-meter time-series data.
+# Provides 5-10× compression over CSV with native type support.
+pyarrow==16.1.0

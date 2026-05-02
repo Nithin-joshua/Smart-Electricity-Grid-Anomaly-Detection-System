@@ -34,21 +34,22 @@ env/
 Thumbs.db
 
 # --- Data Files ---
-# Raw and processed datasets are too large for VCS.
-# Regenerate via: python -m simulator.cli_entrypoint --mode fastforward
+# Raw, processed, and Parquet datasets are too large for VCS.
 data/raw/
 data/processed/
+data/normal_data/
+*.parquet
 
 # --- Model Artifacts ---
-# Trained model weights and converted TFLite files.
-# Regenerate via the training pipeline.
-model/artifacts/*.h5
-model/artifacts/*.tflite
-model/artifacts/*.keras
+# Trained model weights, checkpoints, and logs.
+# Regenerate via: python -m model.training.training_pipeline
+model/artifacts/
+!model/artifacts/.gitkeep
 
 # --- Logs ---
 *.log
 logs/
+training_logs/
 
 # --- Docker ---
 # Ignore persistent volume data if mounted locally.
