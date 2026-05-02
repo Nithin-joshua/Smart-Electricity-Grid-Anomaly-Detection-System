@@ -29,8 +29,8 @@ from config.training_config import (
     SCALER_PARAMS_JSON_PATH,
 )
 from model.training.dataset_loader import iter_meter_dataframes
-from model.training.utils.normalization import FeatureNormalizer
-from model.training.utils.windowing_engine import create_sliding_windows
+from model.training.ml_utils.normalization import FeatureNormalizer
+from model.training.ml_utils.windowing_engine import create_sliding_windows
 from utils.logging_setup import get_module_logger
 
 sequence_builder_logger = get_module_logger("grid_sequence_builder")
